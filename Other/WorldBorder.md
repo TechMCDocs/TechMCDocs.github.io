@@ -7,14 +7,14 @@ description: An analysis of the World Border - done in 1.16.4 by FX (PR0CESS)
 
 *The analysis is done in 1.16.4 by FX (PR0CESS)*
 
-﻿
+
 "World Border" - The visible barrier on the edge of the Minecraft world
 
 "World Boundary" - An invisible wall 1 chunk further than the World Border at the edge of the world. This does not change when the world border changes its size.
-﻿
+
 ## Appearance
 The world border by default looks like blue stripes that are animated. These stripes will become red if the border is shrinking or growing. The border will always appear red in the nether dimension.
-﻿
+
 ## Size
 The world border is the bounding box that surrounds the Minecraft world and prevents you from going past the integer limit on the X & Z axes. The exact size at which the world border is set by default is: X/Z ±29,999,984 - Which is one chunk less than 30M. The center & size of the world border can be changed using the `/worldborder` command. The world border will always apply physics in full blocks, so even if it's halfway through a block internally it's still calculated per block. It will have different sizes based on which dimension you are in, these sizes are determined by the dimension shrinking value.
 
@@ -50,7 +50,7 @@ Scaffolding does not check if it is being extended past the world border, theref
 
 ### Beds
 This is very simple, beds if placed directly on the world border extend one block in due to being 2 blocks long
-﻿
+
 ### Placing against a block
 You are able to place a block on the other side of the world border by placing the block against a block within the border. Trapdoors are usually the best block to do this with.
 
@@ -64,7 +64,7 @@ An interesting bug with the piston head can be used to place blocks on the other
 
 ### Fluids
 Fluids can pass freely through the world border as if it doesn't even exist.
-﻿
+
 ### Chests
 Chests outside of the world border can be accessed, if another chest is placed next to them, extending that chest's inventory outside of the world border where it can be accessed by a player.
 
@@ -93,10 +93,10 @@ Currently, all other methods are just different orientations or placement of the
 
 ### Blocks outside the world border
 Most blocks work the same outside the world border. Except for Ticking tile entities. All scheduled ticks will continue working but tile ticks called every tick will not. This prevents Pistons from being able to retract, furnaces from smelting, hoppers from pushing items into containers, end gateways from extending their life, etc...
-﻿
+
 ### Pushing blocks against the world border
 If a piston pushes a block so it touches the world border, it can cause a Moving_Piston (B36) to appear, this Moving_Piston (B36) will display the block that got pushed, resulting in an effect where you can merge multiple block textures together.
-﻿
+
 ### Pistons pushing past the world border
 Pistons are able to push past the world border under certain conditions. If the piston is facing into the world border and the block on the other side of the border can be destroyed by a piston, then the piston will set its extended state to true, but will only place a Moving_Piston (B36) in front of the piston. When depowering this piston it will retract normally, although if you break this piston while it's extended, the Moving_Piston (B36) will stay. This Moving_Piston (B36) has an extended hitbox of a piston head where the Moving_Piston (B36) is located. Although its tile entity is rendered inside the piston block that just got broken since the tile entity's extended time is 0.
 
@@ -108,10 +108,10 @@ The world border itself can be passed as explained above in Entity Collision. On
 In between the final boundary and the world border you will take damage, there is a 5 block safe zone in front of the world border, once you pass that you take 0.2 Damage for every block in. This means you take 2.2 damage per tick right on the world boundary.
 
 ## Technical Bugs related to the world border
-﻿﻿﻿1. [Block breaking progress can be saved using world borders](https://bugs.mojang.com/browse/MC-54587)
+1. [Block breaking progress can be saved using world borders](https://bugs.mojang.com/browse/MC-54587)
 
-﻿2. [Can place/take water/lava/lilypads outside world border (Ghost Block)](https://bugs.mojang.com/browse/MC-54119)
+2. [Can place/take water/lava/lilypads outside world border (Ghost Block)](https://bugs.mojang.com/browse/MC-54119)
 
-﻿3. [Unable to use any items when aiming at a block that is outside the worldborder](https://bugs.mojang.com/browse/MC-220191)
+3. [Unable to use any items when aiming at a block that is outside the worldborder](https://bugs.mojang.com/browse/MC-220191)
 
-﻿4. [Blocks cannot be blown up past 30 million](https://bugs.mojang.com/browse/MC-223190)
+4. [Blocks cannot be blown up past 30 million](https://bugs.mojang.com/browse/MC-223190)
