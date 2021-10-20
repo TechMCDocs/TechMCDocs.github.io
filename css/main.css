@@ -24,5 +24,5 @@ legend{color:inherit;display:table;max-width:100%;padding:0;white-space:normal}t
 ::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}
 /* End Taking */
 .selector-for-some-widget {box-sizing: content-box;}
-.markdown-format {margin:20px;width:100%;overflow:hidden;}
+.markdown-format {margin:40px;margin-right:60px;margin-left:60px;width:100%;overflow:hidden;}
 img {max-width: 70%;max-height: 70%;display:block;}
