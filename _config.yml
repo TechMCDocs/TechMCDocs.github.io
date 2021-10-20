@@ -1,0 +1,26 @@
+title: McTechWiki
+description: A new minecraft wiki, dedicated to only explaining game mechanics in an easy to edit format!
+
+url: "mctechwiki.github.io"
+plugins:
+  - jekyll-sitemap
+
+permalink: pretty
+exclude:
+  - README.md
+
+keep_files: ["css","js"]
+
+collections:
+  basics:
+    output: true
+  tags:
+    output: true
+  filters:
+    output: true
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default

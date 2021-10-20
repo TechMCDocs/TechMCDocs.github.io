@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="{{ site.lang | default: 'en' }}">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<title>{% if page.title %}{{ page.title }} – {% endif %}{{ site.title }}</title>
+	<meta name="description" content="{{ page.description | default: site.description }}">
+	<meta name="author" content="FX - PR0CESS">
+
+	<meta name="robots" content="index, follow">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+	<meta name="theme-color" content="{{ settings.color_accent }}">
+	<link rel="canonical" href="{{ page.url | replace: 'index.html','' | absolute_url }}">
+
+	<meta property="og:site_name" content="{% if page.title %}{{ page.title }} – {% endif %}{{ site.title }}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ page.url | relative_url }}">
+    <meta property="og:title" content="{{ page.title | default: site.title }}">
+    <meta property="og:description" content="{{ page.description | default: site.description }}">
+
+	<meta name="twitter:site" content="{{ site.title }}">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="{{ site.url | relative_url }}">
+    <meta name="twitter:title" content="{{ page.title | default: site.title }}">
+    <meta name="twitter:description" content="{{ page.description | default: site.description }}">
+
+	{%- if settings.favicon != blank -%}
+    	<link rel="shortcut icon" href="{{ settings.favicon | img_url: '32x32' }}" type="image/png">
+  	{%- endif -%}
+
+	<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+	<meta http-equiv="Pragma" content="no-cache" />
+	<meta http-equiv="Expires" content="0" />
+
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+	<link rel="stylesheet" href="{{ '/css/main.css' | relative_url }}">
+</head>
+<body>
+
+	{% include header.html %}
+
+	<div class="markdown-format">
+	{{ content }}
+	</div>
+
+	{% include footer.html %}
+
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+</body>
+</html>
