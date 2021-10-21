@@ -1,4 +1,4 @@
 $(function(){
-  $("#piece-nav").load("https://mctechwiki.github.io/piece/nav.html");
-  $("#piece-footer").load("https://mctechwiki.github.io/piece/footer.html");
+  $("#piece-nav").load("https://techmcdocs.github.io/piece/nav.html");
+  $("#piece-footer").load("https://techmcdocs.github.io/piece/footer.html");
 });

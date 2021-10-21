@@ -1,7 +1,7 @@
-title: McTechWiki
+title: TechMCDocs
 description: A new minecraft wiki, dedicated to only explaining game mechanics in an easy to edit format!
 
-url: "mctechwiki.github.io"
+url: "techmcdocs.github.io"
 plugins:
   - jekyll-sitemap
 
