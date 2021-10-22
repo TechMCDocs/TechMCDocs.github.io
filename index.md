@@ -3,7 +3,7 @@ home: true
 ---
 
 # The Technical Minecraft Documentation Repo
-### This is the unoficial documentation fFP9dGD6hZ3YK3Cvoemiliathorsenr all things technical about Minecraft, things like how the game computes a tick to how mobs walk. This documentation is hosted and maintained on GitHub by other technical Minecraft players.
+### This is the unoficial documentation for all things technical about Minecraft, things like how the game computes a tick to how mobs walk. This documentation is hosted and maintained on GitHub by other technical Minecraft players.
 
 ## The Difrent Main Articles
 - **The tick:** this is the main article for how the game calculates game ticks and the difrent steps it takes.
