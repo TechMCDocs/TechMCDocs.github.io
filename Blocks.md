@@ -7,4 +7,3 @@ write blocks description here
 
 {% include subpages.html %}
 
-lol

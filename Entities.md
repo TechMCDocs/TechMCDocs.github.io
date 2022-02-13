@@ -1,6 +1,6 @@
 ---
 title: Entities
-description: All the information about the entities of the game
+description: Information about entities in the game
 ---
 
 write entities description here

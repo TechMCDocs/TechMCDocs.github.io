@@ -11,7 +11,6 @@ home: true
 - **Bugs and exploits:** This is the main list article for the game's strange bugs and interesting exploits like duping and supression.
 - **Blocks:** This is the main article for explaining common block properties and links to the articles about all the difrent blocks.
 - **Entities:** This is like the Blocks article but for different mobs and their properties.
-- **Machines and creations:** This is the main list page for the different things you can do in the technical community and how they work
 - **Other:** This is the article for anything that doesn't fit in the other main articles.
 
 ## How To Contribute
