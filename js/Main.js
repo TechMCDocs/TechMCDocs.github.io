@@ -4,7 +4,7 @@ let domContentLoaded = false;
 
 window.addEventListener('DOMContentLoaded', function() { domContentLoaded = true });
 
-class McVersionElement extends HTMLElement {
+class AbstractMcVersionElement extends HTMLElement {
     constructor() {
         super();
         this._range = '*';
@@ -26,19 +26,7 @@ class McVersionElement extends HTMLElement {
         this.setAttribute('range', v);
     }
 
-    shouldBeVisible(selectedVersion, allVersions) {
-        const selectedIndex = allVersions.findIndex(it => it.id === selectedVersion);
-
-        const semverRegex = new RegExp('(\\d+)\\.(\\d+|x)(\\.(\\d+|x))?');
-        const parseSemver = function(ver) {
-            const val = semverRegex.exec(ver);
-            if (val === null) {
-                return null;
-            } else {
-                return {major: +val[1], minor: val[2] === 'x' ? null : +val[2], patch: val[4] === undefined || val[4] === 'x' ? null : +val[4]};
-            }
-        }
-
+    parseRange() {
         let range = this._range.replace(/\s+/g, '');
         const parseExpression = function() {
             const terms = [parseTerm()];
@@ -74,8 +62,14 @@ class McVersionElement extends HTMLElement {
                 range = range.slice(1);
                 return {op: '(', val: expr};
             }
+            if (range.startsWith('*')) {
+                range = range.slice(1);
+                return {op: '*'};
+            }
             let op = '=';
-            if (range.startsWith('<=')) {
+            if (range.startsWith('=')) {
+                range = range.slice(1);
+            } else if (range.startsWith('<=')) {
                 op = '<=';
                 range = range.slice(2);
             } else if (range.startsWith('<')) {
@@ -102,16 +96,36 @@ class McVersionElement extends HTMLElement {
             return {op: op, val: version};
         }
 
-        let expression;
         try {
-            expression = parseExpression();
+            const expression = parseExpression();
             if (range.length > 0) {
                 throw new Error('Trailing characters in version expression');
             }
+            return expression;
         } catch (err) {
             console.error('Version predicate parsing failed: ' + err);
+            return null;
+        }
+    }
+
+    parseSemver(ver) {
+        const semverRegex = new RegExp('(\\d+)\\.(\\d+|x)(\\.(\\d+|x))?');
+        const val = semverRegex.exec(ver);
+        if (val === null) {
+            return null;
+        } else {
+            return {major: +val[1], minor: val[2] === 'x' ? null : +val[2], patch: val[4] === undefined || val[4] === 'x' ? null : +val[4]};
+        }
+    }
+
+    shouldBeVisible(selectedVersion, allVersions) {
+        const selectedIndex = allVersions.findIndex(it => it.id === selectedVersion);
+
+        const expression = this.parseRange();
+        if (expression === null) {
             return true;
         }
+        const parseSemver = this.parseSemver;
 
         const checkExpression = function(expr) {
             for (let i = 0; i < expr.length; i++) {
@@ -134,6 +148,7 @@ class McVersionElement extends HTMLElement {
             switch (predicate.op) {
                 case '(': return checkExpression(predicate.val);
                 case '!': return !checkPredicate(predicate.val);
+                case '*': return true;
             }
             let eqSatisfied;
             let ltSatisfied;
@@ -217,9 +232,264 @@ class McVersionElement extends HTMLElement {
 
         return checkExpression(expression);
     }
+
+    updateVersionText(allVersions) {
+        const versionBox = this.shadowRoot.getElementById('version-box');
+        const friendlyRange = this.getFriendlyRange(allVersions) || '';
+        versionBox.innerText = friendlyRange;
+    }
+
+    getFriendlyRange(allVersions) {
+        const expression = this.parseRange();
+        if (expression === null) {
+            return null;
+        }
+
+        if (expression.length === 1 && expression[0].length === 1 && expression[0][0].op === '=') {
+            return expression[0][0].val + ' only';
+        }
+
+        const parseSemver = this.parseSemver;
+
+        const stringifyExpression = function(expr) {
+            const realExpr = [];
+            const visitExpr = function(anExpr) {
+                for (let i = 0; i < anExpr.length; i++) {
+                    const term = anExpr[i];
+                    if (term.length === 1 && term[0].op === '(') {
+                        visitExpr(term[0].val);
+                    } else {
+                        realExpr.push(term);
+                    }
+                }
+            }
+            visitExpr(expr);
+
+            let applyDeMorgan = realExpr.length > 1;
+            if (applyDeMorgan) {
+                for (let i = 0; i < realExpr.length; i++) {
+                    const term = realExpr[i];
+                    if (term.length !== 1) {
+                        applyDeMorgan = false;
+                        break;
+                    }
+                    switch (term[0].op) {
+                        case '*': return 'all versions';
+                        case '(': case '=': case '!': applyDeMorgan = false; break;
+                        case '>=': case '>': case '<=': case '<': break;
+                        default: throw new Error('unreachable');
+                    }
+                    if (!applyDeMorgan) {
+                        break;
+                    }
+                }
+            }
+
+            if (applyDeMorgan) {
+                const term = [];
+                for (let i = 0; i < realExpr.length; i++) {
+                    const pred = realExpr[i][0];
+                    switch (pred.op) {
+                        case '>=': pred.op = '<'; break;
+                        case '>': pred.op = '<='; break;
+                        case '<=': pred.op = '>'; break;
+                        case '<': pred.op = '>='; break;
+                        default: throw new Error('unreachable');
+                    }
+                    term.push(pred);
+                }
+                return 'all versions except ' + stringifyTerm(term);
+            }
+
+            let result = '';
+            for (let i = 0; i < realExpr.length; i++) {
+                if (i !== 0) {
+                    if (i === realExpr.length - 1) {
+                        result += ' and ';
+                    } else {
+                        result += ', ';
+                    }
+                }
+                result += stringifyTerm(realExpr[i]);
+            }
+            return result;
+        }
+        const stringifyTerm = function(term) {
+            let greaterPred = null;
+            let lessPred = null;
+            let equalPred = null;
+            const notPreds = [];
+            const parenPreds = [];
+            const visitTerm = function(aTerm) {
+                for (let i = 0; i < aTerm.length; i++) {
+                    const pred = aTerm[i];
+                    switch (pred.op) {
+                        case '*': allVersionsPred = true; break;
+                        case '>': case '>=': greaterPred = pred; break;
+                        case '<': case '<=': lessPred = pred; break;
+                        case '=': equalPred = pred; break;
+                        case '!': notPreds.push(pred); break;
+                        case '(':
+                            if (pred.val.length === 1) {
+                                visitTerm(pred.val[0]);
+                            } else {
+                                parenPreds.push(pred);
+                            }
+                            break;
+                        default: throw new Error('unreachable');
+                    }
+                }
+            }
+            visitTerm(term);
+
+            let result = '';
+            if (equalPred !== null) {
+                result = equalPred.val;
+            } else if (lessPred !== null && greaterPred !== null) {
+                if (lessPred.op === '<=' && greaterPred.op === '>=') {
+                    result = 'between ' + greaterPred.val + ' and ' + lessPred.val;
+                } else {
+                    const lessSemver = parseSemver(lessPred.val);
+                    const greaterSemver = parseSemver(greaterPred.val);
+                    let needsFallback = false;
+                    if (lessSemver === null || greaterSemver === null) {
+                        needsFallback = true;
+                    } else {
+                        if (lessPred.op === '<') {
+                            if (lessSemver.patch !== null && lessSemver.patch > 0) {
+                                lessSemver.patch--;
+                            } else if (lessSemver.minor !== null && lessSemver.minor > 0) {
+                                lessSemver.major--;
+                                lessSemver.patch = null;
+                            } else {
+                                needsFallback = true;
+                            }
+                        }
+                        if (greaterPred.op === '>') {
+                            let successfulInc = false;
+                            if (greaterSemver.patch !== null) {
+                                greaterSemver.patch++;
+                                successfulInc = allVersions.find(it => it.id === greaterSemver.major + '.' + greaterSemver.minor + '.' + greaterSemver.patch);
+                            }
+                            if (!successfulInc) {
+                                greaterSemver.patch = null;
+                                if (greaterSemver.minor !== null) {
+                                    greaterSemver.minor++;
+                                    successfulInc = allVersions.find(it => it.id === greaterSemver.major + '.' + greaterSemver.minor);
+                                }
+                                if (!successfulInc) {
+                                    if (greaterSemver.major !== 1) {
+                                        needsFallback = true;
+                                    }
+                                }
+                            }
+                        }
+                        if (!needsFallback) {
+                            result = 'between ' + greaterSemver.major + '.';
+                            if (greaterSemver.minor === null) {
+                                result += 'x';
+                            } else {
+                                result += greaterSemver.minor;
+                                if (greaterSemver.patch !== null) {
+                                    result += '.' + greaterSemver.patch;
+                                }
+                            }
+                            result += ' and ' + lessSemver.major + '.';
+                            if (lessSemver.minor === null) {
+                                result += 'x';
+                            } else {
+                                result += lessSemver.minor;
+                                if (lessSemver.patch !== null) {
+                                    result += '.' + lessSemver.patch;
+                                }
+                            }
+                        }
+                    }
+                    if (needsFallback) {
+                        result = 'between ' + greaterPred.val + (greaterPred.op === '>=' ? ' (inclusive)' : ' (exclusive)') +
+                            ' and ' + lessPred.val + (lessPred.op === '<=' ? ' (inclusive)' : '(exclusive)');
+                    }
+                }
+            } else if (lessPred !== null) {
+                if (lessPred.op === '<') {
+                    result = 'until ' + lessPred.val;
+                } else {
+                    result = 'up to ' + lessPred.val;
+                }
+            } else if (greaterPred !== null) {
+                if (greaterPred.op === '>') {
+                    result = 'after ' + greaterPred.val;
+                } else {
+                    result = 'since ' + greaterPred.val;
+                }
+            } else if (notPreds.length > 0 || parenPreds.length === 0) {
+                result = 'all versions';
+            }
+
+            if (notPreds.length > 0) {
+                const combined = [];
+                for (let i = 0; i < notPreds.length; i++) {
+                    const notPred = notPreds[i];
+                    if (notPred.val.op === '(') {
+                        Array.prototype.push.apply(combined, notPred.val.val);
+                    } else {
+                        combined.push([notPred.val]);
+                    }
+                }
+                if (combined.length > 0) {
+                    result += ' except ' + stringifyExpression(combined);
+                }
+            }
+
+            // extra stuff we couldn't simplify to English
+            for (let i = 0; i < parenPreds.length; i++) {
+                if (result.length > 0) {
+                    result += ' && ';
+                }
+                result += '(' + stringifyExpression(parenPreds[i].val) + ')';
+            }
+
+            return result;
+        }
+
+        return stringifyExpression(expression);
+    }
 }
 
-window.customElements.define('mc-version', McVersionElement);
+class InlineMcVersionElement extends AbstractMcVersionElement {
+    constructor() {
+        super();
+        const shadow = this.attachShadow({mode: 'open'});
+        shadow.innerHTML = `
+            <link rel="stylesheet" href="/pages/css/mcversion-inline.css">
+            <div class="version-all">
+              <div class="version-content">
+                <slot></slot>
+              </div>
+              <div class="version-box" id="version-box"></div>
+            </div>
+        `;
+    }
+}
+
+class BlockMcVersionElement extends AbstractMcVersionElement {
+    constructor() {
+        super();
+        const shadow = this.attachShadow({mode: 'open'});
+        shadow.innerHTML = `
+            <link rel="stylesheet" href="/pages/css/mcversion-block.css">
+            <div class="version-all">
+              <div class="version-box" id="version-box"></div>
+              <div class="version-content">
+                <slot></slot>
+              </div>
+            </div>
+        `;
+    }
+}
+
+window.customElements.define('mc-version', InlineMcVersionElement);
+window.customElements.define('mc-version-block', BlockMcVersionElement);
 
 const onVersionChanged = function() {
     let selectedIndex = this.selectedIndex;
@@ -228,20 +498,25 @@ const onVersionChanged = function() {
     }
     let versions = this.versions;
     const selectedVersion = versions[selectedIndex].id;
-    const mcVersionElements = document.getElementsByTagName('mc-version');
+    const mcVersionElements = Array.prototype.slice.call(document.getElementsByTagName('mc-version'));
+    Array.prototype.push.apply(mcVersionElements, document.getElementsByTagName('mc-version-block'));
     for (let i = 0; i < mcVersionElements.length; i++) {
         const elt = mcVersionElements[i];
+        elt.updateVersionText(versions);
         if (elt.shouldBeVisible(selectedVersion, versions)) {
             elt.classList.add('applied');
             elt.classList.remove('disapplied');
+            elt.classList.remove('applied-red');
         } else {
-            elt.classList.add('disapplied');
+            elt.classList.add(this.showAllVersions ? 'applied-red' : 'disapplied');
             elt.classList.remove('applied');
+            elt.classList.remove(this.showAllVersions ? 'disapplied' : 'applied-red');
         }
     }
+    window.sessionStorage.setItem('mcVersion', selectedVersion);
 }
 
-const updateVersionDropdown = function(launcherMeta, versionDropdown, allowSnapshots) {
+const updateVersionDropdown = function(launcherMeta, versionDropdown, allowSnapshots, showAllVersions) {
     versionDropdown.removeEventListener('change', onVersionChanged);
 
     let currentVersion = window.sessionStorage.getItem('mcVersion');
@@ -278,6 +553,7 @@ const updateVersionDropdown = function(launcherMeta, versionDropdown, allowSnaps
     
     versionDropdown.addEventListener('change', onVersionChanged);
     versionDropdown.versions = versions;
+    versionDropdown.showAllVersions = showAllVersions;
     onVersionChanged.call(versionDropdown);
 }
 
@@ -288,16 +564,29 @@ const applyLauncherMeta = function(launcherMeta) {
     }
     const snapshotCheckbox = document.getElementById('allow-snapshots');
     
-    const allowSnapshots = window.sessionStorage.getItem('allowSnapshots') === 'true';
+    let allowSnapshots = window.sessionStorage.getItem('allowSnapshots') === 'true';
     if (snapshotCheckbox !== null) {
         snapshotCheckbox.checked = allowSnapshots;
         snapshotCheckbox.addEventListener('change', function() {
-            window.sessionStorage.setItem('allowSnapshots', '' + this.checked);
-            updateVersionDropdown(launcherMeta, versionDropdown, this.checked);
+            allowSnapshots = this.checked;
+            window.sessionStorage.setItem('allowSnapshots', '' + allowSnapshots);
+            updateVersionDropdown(launcherMeta, versionDropdown, allowSnapshots, showAllVersions);
+        });
+    }
+
+    const showAllVersionsCheckbox = document.getElementById('show-all-versions');
+
+    let showAllVersions = window.sessionStorage.getItem('showAllVersions') === 'true';
+    if (showAllVersionsCheckbox !== null) {
+        showAllVersionsCheckbox.checked = showAllVersions;
+        showAllVersionsCheckbox.addEventListener('change', function() {
+            showAllVersions = this.checked;
+            window.sessionStorage.setItem('showAllVersions', '' + showAllVersions);
+            updateVersionDropdown(launcherMeta, versionDropdown, allowSnapshots, showAllVersions);
         });
     }
     
-    updateVersionDropdown(launcherMeta, versionDropdown, allowSnapshots);
+    updateVersionDropdown(launcherMeta, versionDropdown, allowSnapshots, showAllVersions);
 }
 
 const applyLauncherMetaWhenLoaded = function(launcherMeta) {
