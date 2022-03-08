@@ -1,11 +1,14 @@
 <div class="list-group">
+    <h1>Subarticles</h1>
 {% assign pagename = page.name | remove_first: ".md"  %}
 {% for p in site.pages %}
 {% if p.name != page.name and p.path contains pagename %}
 {% assign newname = p.path | remove_first: pagename  %}
 {% if p.path != newname %}
-<a href="{{ p.path | remove: '.md' | absolute_url | prepend: 'https://' }}" class="list-group-item list-group-item-action">{{ p.name | remove_first: ".md" }}</a>
+    <a href="{{ p.path | remove: '.md' | absolute_url }}" class="list-group-item list-group-item-action" title="{{p.description}}">{{ p.title }}</a>
+
 {% endif %}
 {% endif %}
 {% endfor %}
+    <br>
 </div>

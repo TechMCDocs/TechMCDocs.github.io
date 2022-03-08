@@ -1,5 +1,5 @@
-title: TechMCDocs
-description: A new minecraft wiki, dedicated to only explaining game mechanics in an easy to edit format!
+title: Technical Minecraft Wiki
+description: A new Minecraft wiki, dedicated to only explaining Technial Minecraft in an easy to edit format!
 
 url: "techmcdocs.github.io"
 plugins:
@@ -8,6 +8,7 @@ plugins:
 permalink: pretty
 exclude:
   - README.md
+  - .idea
 
 keep_files: ["css","js"]
 
