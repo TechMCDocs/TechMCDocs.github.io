@@ -25,3 +25,5 @@ defaults:
       path: ""
     values:
       layout: default
+      
+markdown: GFM
