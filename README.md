@@ -10,8 +10,10 @@ This is the repo of the source controlling the Technical Minecraft Wiki
 
 ## To Do
 Make the search box black
-Change the formatting of the code block
-Titles are too big
-I don't like the font
-
 Lots and lots of bad grammar
+Article contents generator
+Make it throw a user-visible error when it can't load the MC versions.
+
+## Done 
+Change the code block formatting
+Titles are too big
