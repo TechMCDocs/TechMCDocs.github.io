@@ -2,5 +2,7 @@ _site/
 .jekyll-cache/
 .idea
 .sass-cache/
+.vscode
+.liquidrc
 
 Gemfile.lock

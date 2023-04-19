@@ -2,8 +2,8 @@
 home: true
 ---
 
-# Technical Minecraft Documentation Repo
-This is the unofficial documentation for all things Minecraft mechanics and technology. This documentation is hosted and maintained on GitHub - everyone is welcome to contribute!
+# Technical Minecraft Wiki
+This is the unofficial wiki for all things Minecraft mechanics and technology. This documentation is hosted and maintained on GitHub - everyone is welcome to contribute!
 
 ## Main Categories 
 - **Game Tick:** These are articles that talk about the different steps of ticking and what happens in those steps. 
